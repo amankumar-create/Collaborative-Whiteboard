@@ -15,10 +15,8 @@ function Canvas({ socket, username, roomid }) {
 
 
     useEffect(() => {
-        console.log(canvasRef.current)
+        //console.log(canvasRef.current)
         ctx.current = canvasRef.current.getContext('2d');
-
-
     }, []);
     function getCursorPosition(canvas, event) {
         const rect = canvas.getBoundingClientRect()

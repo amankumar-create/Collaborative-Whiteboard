@@ -10,15 +10,14 @@ export default function Chats({ socket, username, roomid }) {
 
     socket.on('message', (payload) => {
         console.log(payload.message);
-        setMessages([...messages, payload]);
+        setMessages([...messages, payload.message]);
     })
 
 
     function handleSend() {
         if (message != "") {
-            socket.emit('message', {
+            socket.emit('sendMessage', {
                 message: message,
-                sender: username,
                 room: roomid
             });
             setMessage("");
@@ -37,7 +36,7 @@ export default function Chats({ socket, username, roomid }) {
                     messages.map((msg) => {
                         return (
                             <div >
-                                <p style={{ lineHeight: "10px" }}><b>{msg.sender + ": "}</b> {msg.message}</p>
+                                <p style={{ lineHeight: "10px", fontWeight: "bold" }}>{msg}</p>
                             </div>
                         )
                     })

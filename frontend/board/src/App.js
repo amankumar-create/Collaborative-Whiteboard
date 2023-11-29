@@ -1,23 +1,17 @@
 import './App.css';
 import { useState } from 'react';
 import Homepage from './components/Homepage';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, BrowserRouter } from 'react-router-dom';
 import Board from './components/Board';
 
 
 function App() {
-  const [Username, setusername] = useState("");
-  const [RoomId, setroomId] = useState("");
-
-  function setUsername(data) {
-    setusername(data);
-  }
-  function setRoomId(data) {
-    setroomId(data);
-  }
+  const [Username, setUsername] = useState("");
+  const [RoomId, setRoomId] = useState("");
+  console.log(Username + " joined "+ RoomId);
   return (
-    <Router>
-      <div  >
+    <BrowserRouter>
+      <div  > 
         <header  >
           <Routes>
             <Route path="/" exact element={<Homepage setUsername={setUsername} setRoomId={setRoomId} />} />
@@ -25,7 +19,7 @@ function App() {
           </Routes>
         </header>
       </div>
-    </Router>
+    </BrowserRouter>
   );
 }
 
