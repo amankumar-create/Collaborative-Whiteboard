@@ -2,7 +2,8 @@ import './App.css';
 import { useState } from 'react';
 import Homepage from './components/Homepage';
 import { BrowserRouter as Router, Routes, Route, BrowserRouter } from 'react-router-dom';
-import Board from './components/Board';
+import Space from './components/Space';
+import Whiteboard from './components/Whiteboard';
 
 
 function App() {
@@ -14,8 +15,9 @@ function App() {
       <div  > 
         <header  >
           <Routes>
+          {/* <Route path="/" exact element={<Whiteboard   />} /> */}
             <Route path="/" exact element={<Homepage setUsername={setUsername} setRoomId={setRoomId} />} />
-            <Route path="/chat" exact element={<Board username={Username} roomid={RoomId} />} />
+            <Route path="/chat" exact element={<Space username={Username} roomid={RoomId} />} />
           </Routes>
         </header>
       </div>

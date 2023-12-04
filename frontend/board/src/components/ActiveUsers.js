@@ -1,30 +1,27 @@
-import React, { useEffect, useState } from 'react';
- 
+import React, { useEffect, useState } from "react";
 
-const ActiveUsers = ({socket}) => {
-    const [userList, setUserList] = useState([]);
+const ActiveUsers = ({ socket }) => {
+  const [userList, setUserList] = useState({});
 
-    useEffect(() => {
-         
-        socket.on('updateUserList', (users) => {
+  useEffect(() => {
+    socket.on("updateUserList", (payload) => {
+      setUserList(payload.activeUsers);
+    });
+  }, []);
 
-            setUserList(users);
-        });
+  return (
+    <div className="ActiveUsers">
+      <h3>User List</h3>
 
-        
-    }, []);
-
-    return (
-        <div>
-            <h2>Active Users in the Room:</h2>
-            <ul>
-                {userList.map((user, index) => (
-                    <li key={index}>{user}</li>
-                ))}
-            </ul>
-            {/* Your chat UI components here */}
-        </div>
-    );
+       
+        {Object.entries(userList).map(([userId, user], index) => (
+          <div className="UserItem">
+            <li style={{ margin: "8px" }} key={index}>{user.username}</li>
+          </div>
+        ))}
+      
+    </div>
+  );
 };
 
 export default ActiveUsers;

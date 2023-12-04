@@ -8,7 +8,7 @@ import ActiveUsers from './ActiveUsers';
 
 const socket = io.connect("http://localhost:5000");
 
-const Board  = ({ username, roomid })=> {
+const Space  = ({ username, roomid })=> {
 
     useEffect(() => {
         console.log('room joined');
@@ -26,4 +26,4 @@ const Board  = ({ username, roomid })=> {
         </div>
     );
 }
-export default Board;
+export default Space;
