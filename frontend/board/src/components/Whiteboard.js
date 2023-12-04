@@ -1,41 +1,80 @@
 import React, { useState, useEffect, useRef  } from 'react';
 import { fabric } from "fabric";
 
+const modes = {
+  DRAWING: "drawing",
+  SELECTION: "selection"
+}
+
 function Whiteboard() {
 
-  const canvas = useRef(null);
-
-//   useEffect(() => {
-//     canvas.current =  new fabric.Canvas(canvas.current, {
-        
-//         backgroundColor: 'pink' ,
-//         selection: false,
-//         renderOnAddRemove: true,
-//       });
-//       canvas.current.setDimensions({
-//         width:window.innerWidth,
-//         height: window.innerHeight
-//       })
-
-//     canvas.current.on("mouse:over", () => {
-//       console.log('hello')
-//     });
-    
-//     // destroy fabric on unmount
-//     return () => {
-//       canvas.current.dispose();
-//       canvas.current = null;
-//     };
-//   }, []);
-
+  const canvasRef = useRef(null);
+  const [isDrawingMode, setIsDrawingMode] = useState(true);
   
 
+  useEffect(() => {
+    const canvas = new fabric.Canvas(canvasRef.current, {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      selection: isDrawingMode ? false : true,
+    });
+
+    const rect = new fabric.Rect({
+      width: 100,
+      height: 100,
+      fill: 'red',
+    });
+
+    canvas.add(rect);
+
+    canvas.isDrawingMode = isDrawingMode;
+
+    const handleToggleMode = () => {
+      console.log("isDrawingMode");
+      setIsDrawingMode((prevMode) => !prevMode);
+      canvas.isDrawingMode = !canvas.isDrawingMode;
+      canvas.selection = !canvas.selection; 
+    };
+
+     canvasRef.current = canvas;
+    const button = document.getElementById('toggleButton');
+
+    button.addEventListener('click', handleToggleMode);
+ 
+    return () => {
+       
+      // Cleanup code (if needed) when the component is unmounted
+    };
+  }, []);
+
+  const handleAddRectangle = () => {
+    const canvas = canvasRef.current;
+
+    if (canvas) {
+      const newRect = new fabric.Rect({
+        width: 200,
+        height: 200,
+        fill: 'blue',
+        left: 200,
+        top: 200,
+      });
+
+      canvas.add(newRect);
+    }
+  };
+   
   return (
-
-    <div >
-      <canvas  />
+    <div>
+      <canvas ref={canvasRef} />
+      <div className='Toolbar'>
+          
+      </div>
+      <button style={{ top:"500px", left:"500px",  position:"fixed"}} id = "toggleButton">
+        {isDrawingMode?"true":"false"}
+      </button>
+      <button onClick={handleAddRectangle}>Add Rectangle</button>
+      
     </div>
-
   );
 }
 export default Whiteboard;

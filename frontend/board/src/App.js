@@ -15,9 +15,9 @@ function App() {
       <div  > 
         <header  >
           <Routes>
-          {/* <Route path="/" exact element={<Whiteboard   />} /> */}
-            <Route path="/" exact element={<Homepage setUsername={setUsername} setRoomId={setRoomId} />} />
-            <Route path="/chat" exact element={<Space username={Username} roomid={RoomId} />} />
+          <Route path="/" exact element={<Whiteboard   />} />
+            {/* <Route path="/" exact element={<Homepage setUsername={setUsername} setRoomId={setRoomId} />} />
+            <Route path="/chat" exact element={<Space username={Username} roomid={RoomId} />} /> */}
           </Routes>
         </header>
       </div>

@@ -16,7 +16,7 @@ const ActiveUsers = ({ socket }) => {
        
         {Object.entries(userList).map(([userId, user], index) => (
           <div className="UserItem">
-            <li style={{ margin: "8px" }} key={index}>{user.username}</li>
+            <li style={{ margin: "8px" }} key={index}>{index} :{user.username}</li>
           </div>
         ))}
       
