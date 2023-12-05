@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef  } from 'react';
 import { fabric } from "fabric";
+import { BsPenFill } from "react-icons/bs";
 
 const modes = {
   DRAWING: "drawing",
@@ -14,6 +15,7 @@ function Whiteboard() {
 
   useEffect(() => {
     const canvas = new fabric.Canvas(canvasRef.current, {
+      backgroundColor: "#F0F0F0",
       width: window.innerWidth,
       height: window.innerHeight,
       selection: isDrawingMode ? false : true,
@@ -67,6 +69,8 @@ function Whiteboard() {
     <div>
       <canvas ref={canvasRef} />
       <div className='Toolbar'>
+        <button className='tool' ><BsPenFill className='icon'/></button>
+          
           
       </div>
       <button style={{ top:"500px", left:"500px",  position:"fixed"}} id = "toggleButton">
