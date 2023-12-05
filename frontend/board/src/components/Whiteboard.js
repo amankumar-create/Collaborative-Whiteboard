@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef  } from 'react';
 import { fabric } from "fabric";
 import { FaPen } from "react-icons/fa";
 import { FaArrowPointer } from "react-icons/fa6";
-
+import { IoShapes } from "react-icons/io5";
 
 const modes = {
   DRAWING: "drawing",
@@ -87,7 +87,7 @@ function Whiteboard() {
       <div className='Toolbar'>
         <button className={`tool ${interactionMode==modes.DRAWING?"selected":""}`}  onClick={handleToggleMode}><FaPen className='icon'/></button>
         <button className={`tool ${interactionMode==modes.SELECTION?"selected":""}`} onClick={handleToggleMode}><FaArrowPointer className='icon'/></button>
-          
+        <button className={`tool`} onClick={handleToggleMode}><IoShapes className='icon'/></button>
           
       </div>
      
