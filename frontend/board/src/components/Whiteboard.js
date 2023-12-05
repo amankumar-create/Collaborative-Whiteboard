@@ -1,16 +1,22 @@
 import React, { useState, useEffect, useRef  } from 'react';
 import { fabric } from "fabric";
-import { BsPenFill } from "react-icons/bs";
+import { FaPen } from "react-icons/fa";
+import { FaArrowPointer } from "react-icons/fa6";
+
 
 const modes = {
   DRAWING: "drawing",
-  SELECTION: "selection"
+  SELECTION: "selection",
+  ERASING:"erasing",
+  SHAPE_ADD: "shape-adding",
+  BUCKET_FILL: "bucket-fill"
 }
 
 function Whiteboard() {
 
   const canvasRef = useRef(null);
   const [isDrawingMode, setIsDrawingMode] = useState(true);
+  const [interactionMode, setInteractionMode] =  useState(modes.DRAWING);
   
 
   useEffect(() => {
@@ -31,24 +37,20 @@ function Whiteboard() {
 
     canvas.isDrawingMode = isDrawingMode;
 
-    const handleToggleMode = () => {
-      console.log("isDrawingMode");
-      setIsDrawingMode((prevMode) => !prevMode);
-      canvas.isDrawingMode = !canvas.isDrawingMode;
-      canvas.selection = !canvas.selection; 
-    };
+    
+   
 
-     canvasRef.current = canvas;
-    const button = document.getElementById('toggleButton');
+    canvasRef.current = canvas;
+    // const button = document.getElementById('toggleButton');
 
-    button.addEventListener('click', handleToggleMode);
+    // button.addEventListener('click', handleToggleMode);
  
     return () => {
        
       // Cleanup code (if needed) when the component is unmounted
     };
   }, []);
-
+   
   const handleAddRectangle = () => {
     const canvas = canvasRef.current;
 
@@ -65,17 +67,30 @@ function Whiteboard() {
     }
   };
    
+  const handleToggleMode = () => {
+    const canvas = canvasRef.current;
+    setIsDrawingMode((prevMode) => !prevMode);
+     
+    canvas.isDrawingMode = !canvas.isDrawingMode;
+    canvas.selection = !canvas.selection; 
+    if(canvas.isDrawingMode){
+      setInteractionMode(modes.DRAWING);
+    }
+    else{
+      setInteractionMode(modes.SELECTION);
+    }
+    
+  };
   return (
     <div>
       <canvas ref={canvasRef} />
       <div className='Toolbar'>
-        <button className='tool' ><BsPenFill className='icon'/></button>
+        <button className={`tool ${interactionMode==modes.DRAWING?"selected":""}`}  onClick={handleToggleMode}><FaPen className='icon'/></button>
+        <button className={`tool ${interactionMode==modes.SELECTION?"selected":""}`} onClick={handleToggleMode}><FaArrowPointer className='icon'/></button>
           
           
       </div>
-      <button style={{ top:"500px", left:"500px",  position:"fixed"}} id = "toggleButton">
-        {isDrawingMode?"true":"false"}
-      </button>
+     
       <button onClick={handleAddRectangle}>Add Rectangle</button>
       
     </div>

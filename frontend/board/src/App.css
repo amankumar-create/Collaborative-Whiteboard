@@ -91,9 +91,9 @@
     top: 0%;
     left: 50%;
     transform: translate(-50%, 10%);
-    background-color: rgba(195, 195, 195, 0.718); 
+    background-color: rgba(210, 210, 210, 0.718); 
     backdrop-filter: blur(8px);  
-    border: 1px solid rgba(0, 0, 0, 0.5); 
+    /* border: 1px solid rgba(0, 0, 0, 0.5);  */
     border-radius: 10px;  
     padding: 10px;
  
@@ -101,20 +101,28 @@
    
   }
   .tool{
-   color:#fff;
-   width: 35px;
-   height: 35px;
+   background-color:transparent;
+   width: 45px;
+   height: 40px;
    border-style: hidden;  
-   border-radius: 5px;
+   border-radius: 8px;
+   margin-right: 20px;
    /* box-shadow: 3px 3px 3x rgb(255, 255, 255); */
-   box-shadow: 0 0 2px 2px #ffffff; 
+ 
 
   }
-
+  .selected{
+    background-color:#fff;
+    box-shadow: 0 0 2px 2px #eaeaea; 
+  }
   .icon{
     width: 24px;
     height: 24px;
     color: black;
  
   }
-  
+  .tool:hover {
+    background-color: #ffffff; /* Change background color on hover */
+    color: #ffffff; /* Change text color on hover */
+    /* Add other styles as needed */
+  }
