@@ -81,12 +81,11 @@
     background-color: #e0e0e0;
   }
   .Toolbar{
-    width: 400px;
     height: 30px;
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-evenly;
     position: fixed;
     top: 0%;
     left: 50%;
@@ -106,10 +105,7 @@
    height: 40px;
    border-style: hidden;  
    border-radius: 8px;
-   margin-right: 20px;
-   /* box-shadow: 3px 3px 3x rgb(255, 255, 255); */
- 
-
+  margin: 2px;
   }
   .selected{
     background-color:#fff;

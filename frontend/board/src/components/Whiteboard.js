@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef  } from 'react';
 import { fabric } from "fabric";
-import { FaPen } from "react-icons/fa";
+import { FaCaravan, FaPen } from "react-icons/fa";
 import { FaArrowPointer } from "react-icons/fa6";
 import { IoShapes } from "react-icons/io5";
 
@@ -9,89 +9,182 @@ const modes = {
   SELECTION: "selection",
   ERASING:"erasing",
   SHAPE_ADD: "shape-adding",
-  BUCKET_FILL: "bucket-fill"
+  BUCKET_FILL: "bucket-fill",
+  TEXT_ADD: "text-adding"
 }
 
 function Whiteboard() {
 
   const canvasRef = useRef(null);
-  const [isDrawingMode, setIsDrawingMode] = useState(true);
   const [interactionMode, setInteractionMode] =  useState(modes.DRAWING);
+  const [selection, setSelection] = useState(null);
   
-
   useEffect(() => {
     const canvas = new fabric.Canvas(canvasRef.current, {
       backgroundColor: "#F0F0F0",
       width: window.innerWidth,
       height: window.innerHeight,
-      selection: isDrawingMode ? false : true,
+      selection: false,
     });
 
-    const rect = new fabric.Rect({
-      width: 100,
-      height: 100,
-      fill: 'red',
-    });
-
-    canvas.add(rect);
-
-    canvas.isDrawingMode = isDrawingMode;
-
-    
-   
-
-    canvasRef.current = canvas;
-    // const button = document.getElementById('toggleButton');
-
-    // button.addEventListener('click', handleToggleMode);
+    canvas.isDrawingMode = true;
  
+    canvasRef.current = canvas;
+   
     return () => {
        
       // Cleanup code (if needed) when the component is unmounted
     };
   }, []);
-   
-  const handleAddRectangle = () => {
-    const canvas = canvasRef.current;
 
-    if (canvas) {
-      const newRect = new fabric.Rect({
-        width: 200,
-        height: 200,
-        fill: 'blue',
-        left: 200,
-        top: 200,
-      });
-
-      canvas.add(newRect);
-    }
-  };
-   
-  const handleToggleMode = () => {
+  useEffect(()=>{
     const canvas = canvasRef.current;
-    setIsDrawingMode((prevMode) => !prevMode);
-     
-    canvas.isDrawingMode = !canvas.isDrawingMode;
-    canvas.selection = !canvas.selection; 
-    if(canvas.isDrawingMode){
-      setInteractionMode(modes.DRAWING);
+    console.log(interactionMode);
+
+    if(interactionMode== modes.DRAWING){
+      canvas.isDrawingMode = true;
     }
     else{
-      setInteractionMode(modes.SELECTION);
+      canvas.isDrawingMode = false;
+    }
+    if(interactionMode== modes.SELECTION){
+      canvas.selection = true;
+    }
+    else{
+      canvas.selection = false;
     }
     
+
+  }, [interactionMode] )
+
+  useEffect(()=>{
+    const canvas = canvasRef.current;
+    if(interactionMode==modes.SHAPE_ADD){
+      canvas.on('mouse:down', handleMouseDown);
+      canvas.on('mouse:move', handleMouseMove);
+      canvas.on('mouse:up', handleMouseUp);
+    }
+
+    return () => {
+      canvas.off('mouse:down', handleMouseDown);
+      canvas.off('mouse:move', handleMouseMove);
+      canvas.off('mouse:up', handleMouseUp);
+    };
+  }, [interactionMode,selection]);
+  
+  const handleMouseDown = (event) => {
+    const canvas = canvasRef.current;
+    console.log("mouse down");
+    const pointer = canvas.getPointer(event.e);
+  
+    setSelection({
+      startX: pointer.x,
+      startY: pointer.y,
+    });
+  };
+
+  const handleMouseMove = (event) => {
+    
+    if (selection==null ) return;
+    
+    const canvas = canvasRef.current;
+
+    const pointer = canvas.getPointer(event.e);
+    const width = pointer.x - selection.startX;
+    const height = pointer.y - selection.startY;
+    console.log(width, height);
+    if (!selection.rect) {
+      const rect = new fabric.Rect({
+        left: selection.startX,
+        top: selection.startY,
+        width,
+        height,
+        fill: 'transparent', // Set fill to transparent for an outline
+        stroke: 'rgba(0,0,255,0.3)', // Outline color
+        strokeWidth: 2, // Outline width 
+        selectable: false, // The selection area should not be selectable
+      });
+
+      canvas.add(rect);
+      selection.rect = rect;
+    } else {
+      selection.rect.set({ width, height });
+      canvas.renderAll();
+    }
+  };
+
+  const handleMouseUp = (event) => {
+    if (selection!=null && selection.rect!=null) {
+      const canvas = canvasRef.current;
+      canvas.remove(selection.rect);
+      const pointer = canvas.getPointer(event.e);
+      const width = pointer.x - selection.startX;
+      const height = pointer.y - selection.startY;
+      const rect = new fabric.Rect({
+        left: selection.startX,
+        top: selection.startY,
+        width,
+        height,
+        fill: 'transparent', // Set fill to transparent for an outline
+        stroke: 'rgba(0,0,0,1)', // Outline color
+        strokeWidth: 10, // Outline width 
+        selectable: true, // The selection area should not be selectable
+         
+      });
+      rect.on('scaling', (event) => {
+        const newWidth = rect.width * rect.scaleX;
+        const newHeight = rect.height * rect.scaleY;
+ 
+        rect.set({ width:newWidth, height:newHeight, scaleX:1, scaleY:1 });
+        console.log(rect.scaleX, rect.scaleY)
+ 
+      });
+      canvas.add(rect);
+      setSelection(null);
+      setInteractionMode(modes.SELECTION);
+    }else{
+      setSelection(null);
+      console.log("mouse up");
+    }
+  };
+ 
+   
+  const handleToggleMode = (event) => {
+ 
+    switch(event.currentTarget.id){
+      case 'drawing':
+        setInteractionMode(modes.DRAWING);
+        break;
+
+      case 'selection':
+        setInteractionMode(modes.SELECTION);
+        break;
+
+      case 'shape-adding':
+        setInteractionMode(modes.SHAPE_ADD);
+        break;
+      
+      case 'text-add':
+        setInteractionMode(modes.TEXT_ADD);
+        break;
+
+      default:
+        setInteractionMode(modes.SELECTION);
+
+    }
+
   };
   return (
     <div>
       <canvas ref={canvasRef} />
       <div className='Toolbar'>
-        <button className={`tool ${interactionMode==modes.DRAWING?"selected":""}`}  onClick={handleToggleMode}><FaPen className='icon'/></button>
-        <button className={`tool ${interactionMode==modes.SELECTION?"selected":""}`} onClick={handleToggleMode}><FaArrowPointer className='icon'/></button>
-        <button className={`tool`} onClick={handleToggleMode}><IoShapes className='icon'/></button>
+        <button id='drawing' className={`tool ${interactionMode==modes.DRAWING?"selected":""}`}  onClick={handleToggleMode}><FaPen className='icon'/></button>
+        <button id='selection' className={`tool ${interactionMode==modes.SELECTION?"selected":""}`} onClick={handleToggleMode}><FaArrowPointer className='icon'/></button>
+        <button id ='shape-adding' className={`tool ${interactionMode==modes.SHAPE_ADD?"selected":""}`} onClick={handleToggleMode}><IoShapes className='icon'/></button>
           
       </div>
      
-      <button onClick={handleAddRectangle}>Add Rectangle</button>
+       
       
     </div>
   );
