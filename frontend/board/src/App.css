@@ -89,14 +89,14 @@
     position: fixed;
     top: 0%;
     left: 50%;
-    transform: translate(-50%, 10%);
-    background-color: rgba(210, 210, 210, 0.718); 
+    transform: translate(-50%, 15%);
+    background-color: rgba(234, 234, 234, 0.615); 
     backdrop-filter: blur(8px);  
     /* border: 1px solid rgba(0, 0, 0, 0.5);  */
     border-radius: 10px;  
     padding: 10px;
  
-    box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2);
+    box-shadow:1px 3px 8px 4px rgba(0, 0, 0, 0.2);
    
   }
   .tool{
@@ -110,11 +110,13 @@
   .selected{
     background-color:#fff;
     box-shadow: 0 0 2px 2px #eaeaea; 
+    
   }
   .icon{
     width: 24px;
     height: 24px;
     color: black;
+    margin-top: 5px;
  
   }
   .tool:hover {

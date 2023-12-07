@@ -3,6 +3,9 @@ import { fabric } from "fabric";
 import { FaCaravan, FaPen } from "react-icons/fa";
 import { FaArrowPointer } from "react-icons/fa6";
 import { IoShapes } from "react-icons/io5";
+import { FaEraser } from "react-icons/fa6";
+import { MdTextFields } from "react-icons/md";
+import PropertiesToolbar from './PropertiesToolbar';
 
 const modes = {
   DRAWING: "drawing",
@@ -18,7 +21,8 @@ function Whiteboard() {
   const canvasRef = useRef(null);
   const [interactionMode, setInteractionMode] =  useState(modes.DRAWING);
   const [selection, setSelection] = useState(null);
-  
+  const [selectedObject, setSelectedObject] = useState(null);
+
   useEffect(() => {
     const canvas = new fabric.Canvas(canvasRef.current, {
       backgroundColor: "#F0F0F0",
@@ -49,6 +53,16 @@ function Whiteboard() {
     }
     if(interactionMode== modes.SELECTION){
       canvas.selection = true;
+      canvas.on('selection:created', function(event) {
+        setSelectedObject(event.target);
+        const selectedObject = event.target;
+        console.log("object selected");
+        // updateToolbarPosition(selectedObject);
+        // document.getElementById('toolbar').style.display = 'block';
+      });
+      canvas.on('selection:cleared', function(event) {
+        setSelectedObject(null);
+      });
     }
     else{
       canvas.selection = false;
@@ -164,8 +178,12 @@ function Whiteboard() {
         setInteractionMode(modes.SHAPE_ADD);
         break;
       
-      case 'text-add':
+      case 'text-adding':
         setInteractionMode(modes.TEXT_ADD);
+        break;
+
+      case 'erasing':
+        setInteractionMode(modes.ERASING);
         break;
 
       default:
@@ -174,6 +192,11 @@ function Whiteboard() {
     }
 
   };
+  if(canvasRef){
+    if(canvasRef.current){
+      console.log("Canvas ref not null");
+    }
+  }
   return (
     <div>
       <canvas ref={canvasRef} />
@@ -181,9 +204,14 @@ function Whiteboard() {
         <button id='drawing' className={`tool ${interactionMode==modes.DRAWING?"selected":""}`}  onClick={handleToggleMode}><FaPen className='icon'/></button>
         <button id='selection' className={`tool ${interactionMode==modes.SELECTION?"selected":""}`} onClick={handleToggleMode}><FaArrowPointer className='icon'/></button>
         <button id ='shape-adding' className={`tool ${interactionMode==modes.SHAPE_ADD?"selected":""}`} onClick={handleToggleMode}><IoShapes className='icon'/></button>
+        <button id ='text-adding' className={`tool ${interactionMode==modes.TEXT_ADD?"selected":""}`} onClick={handleToggleMode}><MdTextFields className='icon'/></button>
+        <button id ='erasing' className={`tool ${interactionMode==modes.ERASING?"selected":""}`} onClick={handleToggleMode}><FaEraser className='icon'/></button>
           
       </div>
-     
+      {
+        canvasRef==null?"":canvasRef.current==null?"": canvasRef.current.getActiveObject()==null?"":<PropertiesToolbar canvas={canvasRef.current}></PropertiesToolbar>
+      }
+      
        
       
     </div>
