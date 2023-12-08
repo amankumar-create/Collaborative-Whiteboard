@@ -30,7 +30,8 @@ function Whiteboard() {
       height: window.innerHeight,
       selection: false,
     });
-
+     
+     
     canvas.isDrawingMode = true;
  
     canvasRef.current = canvas;
@@ -54,11 +55,13 @@ function Whiteboard() {
     if(interactionMode== modes.SELECTION){
       canvas.selection = true;
       canvas.on('selection:created', function(event) {
-        setSelectedObject(event.target);
-        const selectedObject = event.target;
-        console.log("object selected");
-        // updateToolbarPosition(selectedObject);
-        // document.getElementById('toolbar').style.display = 'block';
+        const obj = canvas.getActiveObject();
+        setSelectedObject(obj);
+        const center = obj.getCenterPoint();
+        obj.originX ="center";
+        obj.originY ="center";
+        obj.left = center.x;
+        obj.top = center.y;
       });
       canvas.on('selection:cleared', function(event) {
         setSelectedObject(null);
@@ -143,15 +146,18 @@ function Whiteboard() {
         stroke: 'rgba(0,0,0,1)', // Outline color
         strokeWidth: 10, // Outline width 
         selectable: true, // The selection area should not be selectable
+       
          
       });
+      const x=  (pointer.x + selection.startX)/2;
+      const y = (pointer.y + selection.startY)/2;
+      
       rect.on('scaling', (event) => {
         const newWidth = rect.width * rect.scaleX;
         const newHeight = rect.height * rect.scaleY;
  
-        rect.set({ width:newWidth, height:newHeight, scaleX:1, scaleY:1 });
-        console.log(rect.scaleX, rect.scaleY)
- 
+        rect.set({ 'width':newWidth, 'height':newHeight, 'scaleX':1, 'scaleY':1 });
+        
       });
       canvas.add(rect);
       setSelection(null);
@@ -209,7 +215,7 @@ function Whiteboard() {
           
       </div>
       {
-        canvasRef==null?"":canvasRef.current==null?"": canvasRef.current.getActiveObject()==null?"":<PropertiesToolbar canvas={canvasRef.current}></PropertiesToolbar>
+        selectedObject==null?"":<PropertiesToolbar canvas={canvasRef.current}></PropertiesToolbar>
       }
       
        

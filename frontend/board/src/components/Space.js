@@ -6,7 +6,7 @@ import Chats from './Chats';
 import Canvas from './Canvas';
 import ActiveUsers from './ActiveUsers';
 
-const socket = io.connect("http://localhost:5000");
+ const socket = io.connect("http://localhost:5000");
 
 const Space  = ({ username, roomid })=> {
 

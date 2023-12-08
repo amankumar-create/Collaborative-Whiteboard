@@ -105,7 +105,7 @@
    height: 40px;
    border-style: hidden;  
    border-radius: 8px;
-  margin: 2px;
+    margin: 2px;
   }
   .selected{
     background-color:#fff;
@@ -120,7 +120,47 @@
  
   }
   .tool:hover {
-    background-color: #ffffff9f; /* Change background color on hover */
+    background-color: #c4c4c49f; /* Change background color on hover */
     color: #ffffff; /* Change text color on hover */
     /* Add other styles as needed */
+  }
+
+  .slider {
+    display: flex;
+    align-items: center;
+    margin-right: 20px;
+  }
+  
+  input[type="range"] {
+    appearance: none;
+    background-color: transparent;
+    border: none;
+    outline: none;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(
+      to right,
+      #ccc 0%,
+      #ddd 50%,
+      #ccc 100%
+    );
+  }
+  
+  .value {
+    margin-left: 10px;
+  }
+
+  .Shape-selector{
+    width: 100px;
+    display: inline;
+    position: fixed;
+     
+    transform: translate(-50%, 15%);
+    background-color: rgba(234, 234, 234, 0.615); 
+    backdrop-filter: blur(8px);  
+    /* border: 1px solid rgba(0, 0, 0, 0.5);  */
+    border-radius: 10px;  
+    padding: 10px;
+ 
+    box-shadow:1px 3px 8px 4px rgba(0, 0, 0, 0.2);
   }
