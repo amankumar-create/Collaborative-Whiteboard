@@ -76,7 +76,7 @@ function Whiteboard() {
 
   useEffect(()=>{
     const canvas = canvasRef.current;
-    if(interactionMode==modes.SHAPE_ADD){
+    if(interactionMode==modes.SHAPE_ADD || interactionMode==modes.TEXT_ADD){
       canvas.on('mouse:down', handleMouseDown);
       canvas.on('mouse:move', handleMouseMove);
       canvas.on('mouse:up', handleMouseUp);
@@ -137,6 +137,8 @@ function Whiteboard() {
       const pointer = canvas.getPointer(event.e);
       const width = pointer.x - selection.startX;
       const height = pointer.y - selection.startY;
+      
+      
       const rect = new fabric.Rect({
         left: selection.startX,
         top: selection.startY,
@@ -159,9 +161,41 @@ function Whiteboard() {
         rect.set({ 'width':newWidth, 'height':newHeight, 'scaleX':1, 'scaleY':1 });
         
       });
-      canvas.add(rect);
-      setSelection(null);
+
+      const text = new fabric.IText('Click to edit...', {
+        left: selection.startX,
+        top: selection.startY,
+        width,
+        height,
+        fill: 'transparent', // Set fill to transparent for an outline
+         
+        selectable: true, // The selection area should not be selectable
+        fontFamily: 'Arial',
+        fill: '#000000',
+        editable: true,
+          
+      });
+
+      if(interactionMode==modes.SHAPE_ADD)
+      { 
+        canvas.add(rect);
+        canvas.setActiveObject(rect);
+      }
+      else{
+
+        canvas.add(text);
+        canvas.setActiveObject(text);
+        text.enterEditing();
+        text.selectionStart = text.text.length; // Place cursor at the end of the text
+        text.selectionStyle = {
+          cursorColor: '#000000', // Set cursor color to black
+          cursorOpacity: 1, // Ensure cursor is visible
+          cursorDelay: 1, // Set cursor blink interval in milliseconds
+        };
+  
+      }
       setInteractionMode(modes.SELECTION);
+      setSelection(null);
     }else{
       setSelection(null);
       console.log("mouse up");
