@@ -78,8 +78,8 @@ const PropertiesToolbar = ({canvas})=>{
             const rect = new fabric.Rect({...obj,
                 left: obj.left,
                 top: obj.top,
-                rx :obj.width/20,
-                ry: obj.height/20
+                rx :obj.width/10,
+                ry: obj.height/10
               });
               canvas.add(rect);
               canvas.setActiveObject(rect);
@@ -89,8 +89,11 @@ const PropertiesToolbar = ({canvas})=>{
         obj1.on('scaling', (event) => {
             const newWidth = obj1.width * obj1.scaleX;
             const newHeight = obj1.height * obj1.scaleY;
-     
+            
             obj1.set({ 'width':newWidth, 'height':newHeight, 'scaleX':1, 'scaleY':1 });
+            if(selectedShape==shapes.ELPS){
+                obj1.set({rx:Math.min(newWidth,newHeight)/10, ry:Math.min(newWidth,newHeight)/10});  
+            }
             
           });
         canvas.renderAll();
@@ -134,10 +137,10 @@ const PropertiesToolbar = ({canvas})=>{
          
     
     const colorPickerTool = <input
-    type="color"
-    value={strokeColor}
-    onChange={(e) => {
-      setStrokeColor(e.target.value);
+        type="color"
+        value={strokeColor}
+        onChange={(e) => {
+        setStrokeColor(e.target.value);
     }}
   />; 
 

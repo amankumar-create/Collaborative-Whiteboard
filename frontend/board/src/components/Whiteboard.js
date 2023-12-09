@@ -22,6 +22,10 @@ function Whiteboard() {
   const [interactionMode, setInteractionMode] =  useState(modes.DRAWING);
   const [selection, setSelection] = useState(null);
   const [selectedObject, setSelectedObject] = useState(null);
+  const isPanning = useRef(false);
+  const lastX = useRef(0);
+  const lastY = useRef(0);
+
 
   useEffect(() => {
     const canvas = new fabric.Canvas(canvasRef.current, {
@@ -33,7 +37,24 @@ function Whiteboard() {
      
      
     canvas.isDrawingMode = true;
- 
+     
+    canvas.on('mouse:wheel', (event) => {
+      const delta = event.e.deltaY;
+      const zoom = canvas.getZoom();
+      const zoomFactor = 1.1;
+
+      if (delta > 0) {
+        // Zoom out
+        canvas.setZoom(zoom / zoomFactor);
+      } else {
+        // Zoom in
+        canvas.setZoom(zoom * zoomFactor);
+      }
+
+      event.e.preventDefault();
+      event.e.stopPropagation();
+    });
+
     canvasRef.current = canvas;
    
     return () => {
@@ -76,11 +97,11 @@ function Whiteboard() {
 
   useEffect(()=>{
     const canvas = canvasRef.current;
-    if(interactionMode==modes.SHAPE_ADD || interactionMode==modes.TEXT_ADD){
+    
       canvas.on('mouse:down', handleMouseDown);
       canvas.on('mouse:move', handleMouseMove);
       canvas.on('mouse:up', handleMouseUp);
-    }
+    
 
     return () => {
       canvas.off('mouse:down', handleMouseDown);
@@ -92,113 +113,136 @@ function Whiteboard() {
   const handleMouseDown = (event) => {
     const canvas = canvasRef.current;
     console.log("mouse down");
-    const pointer = canvas.getPointer(event.e);
-  
-    setSelection({
-      startX: pointer.x,
-      startY: pointer.y,
-    });
-  };
-
-  const handleMouseMove = (event) => {
-    
-    if (selection==null ) return;
-    
-    const canvas = canvasRef.current;
-
-    const pointer = canvas.getPointer(event.e);
-    const width = pointer.x - selection.startX;
-    const height = pointer.y - selection.startY;
-    console.log(width, height);
-    if (!selection.rect) {
-      const rect = new fabric.Rect({
-        left: selection.startX,
-        top: selection.startY,
-        width,
-        height,
-        fill: 'transparent', // Set fill to transparent for an outline
-        stroke: 'rgba(0,0,255,0.3)', // Outline color
-        strokeWidth: 2, // Outline width 
-        selectable: false, // The selection area should not be selectable
+    if(interactionMode==modes.SHAPE_ADD || interactionMode==modes.TEXT_ADD){
+      const pointer = canvas.getPointer(event.e);
+      
+      setSelection({
+        startX: pointer.x,
+        startY: pointer.y,
       });
-
-      canvas.add(rect);
-      selection.rect = rect;
-    } else {
-      selection.rect.set({ width, height });
-      canvas.renderAll();
+    }
+    if(interactionMode==modes.ERASING){
+      isPanning.current = true;
+      lastX.current = event.e.clientX;
+      lastY.current = event.e.clientY;
     }
   };
 
-  const handleMouseUp = (event) => {
-    if (selection!=null && selection.rect!=null) {
-      const canvas = canvasRef.current;
-      canvas.remove(selection.rect);
-      const pointer = canvas.getPointer(event.e);
-      const width = pointer.x - selection.startX;
-      const height = pointer.y - selection.startY;
-      
-      
-      const rect = new fabric.Rect({
-        left: selection.startX,
-        top: selection.startY,
-        width,
-        height,
-        fill: 'transparent', // Set fill to transparent for an outline
-        stroke: 'rgba(0,0,0,1)', // Outline color
-        strokeWidth: 10, // Outline width 
-        selectable: true, // The selection area should not be selectable
-       
-         
-      });
-      const x=  (pointer.x + selection.startX)/2;
-      const y = (pointer.y + selection.startY)/2;
-      
-      rect.on('scaling', (event) => {
-        const newWidth = rect.width * rect.scaleX;
-        const newHeight = rect.height * rect.scaleY;
- 
-        rect.set({ 'width':newWidth, 'height':newHeight, 'scaleX':1, 'scaleY':1 });
+  const handleMouseMove = (event) => {
+    const canvas = canvasRef.current;
+    if(interactionMode==modes.SHAPE_ADD || interactionMode==modes.TEXT_ADD){
+        if (selection==null ) return;
+
+
+        const pointer = canvas.getPointer(event.e);
+        const width = pointer.x - selection.startX;
+        const height = pointer.y - selection.startY;
+        console.log(width, height);
+        if (!selection.rect) {
+          const rect = new fabric.Rect({
+            left: selection.startX,
+            top: selection.startY,
+            width,
+            height,
+            fill: 'transparent', // Set fill to transparent for an outline
+            stroke: 'rgba(0,0,255,0.3)', // Outline color
+            strokeWidth: 2, // Outline width 
+            selectable: false, // The selection area should not be selectable
+          });
         
-      });
-
-      const text = new fabric.IText('Click to edit...', {
-        left: selection.startX,
-        top: selection.startY,
-        width,
-        height,
-        fill: 'transparent', // Set fill to transparent for an outline
-         
-        selectable: true, // The selection area should not be selectable
-        fontFamily: 'Arial',
-        fill: '#000000',
-        editable: true,
-          
-      });
-
-      if(interactionMode==modes.SHAPE_ADD)
-      { 
-        canvas.add(rect);
-        canvas.setActiveObject(rect);
+          canvas.add(rect);
+          selection.rect = rect;
+        } else {
+          selection.rect.set({ width, height });
+          canvas.renderAll();
+        }
       }
-      else{
-
-        canvas.add(text);
-        canvas.setActiveObject(text);
-        text.enterEditing();
-        text.selectionStart = text.text.length; // Place cursor at the end of the text
-        text.selectionStyle = {
-          cursorColor: '#000000', // Set cursor color to black
-          cursorOpacity: 1, // Ensure cursor is visible
-          cursorDelay: 1, // Set cursor blink interval in milliseconds
-        };
+      else if(interactionMode==modes.ERASING){
+        if (isPanning.current) {
+          const deltaX = event.e.clientX - lastX.current;
+          const deltaY = event.e.clientY - lastY.current;
   
+          canvas.relativePan(new fabric.Point(deltaX, deltaY));
+          lastX.current = event.e.clientX;
+          lastY.current = event.e.clientY;
+        }
       }
-      setInteractionMode(modes.SELECTION);
-      setSelection(null);
-    }else{
-      setSelection(null);
-      console.log("mouse up");
+  };
+
+  const handleMouseUp = (event) => {
+    if(interactionMode==modes.SHAPE_ADD || interactionMode==modes.TEXT_ADD){
+        if (selection!=null && selection.rect!=null) {
+          const canvas = canvasRef.current;
+          canvas.remove(selection.rect);
+          const pointer = canvas.getPointer(event.e);
+          const width = pointer.x - selection.startX;
+          const height = pointer.y - selection.startY;
+
+
+          const rect = new fabric.Rect({
+            left: selection.startX,
+            top: selection.startY,
+            width,
+            height,
+            fill: 'transparent', // Set fill to transparent for an outline
+            stroke: 'rgba(0,0,0,1)', // Outline color
+            strokeWidth: 10, // Outline width 
+            selectable: true, // The selection area should not be selectable
+          
+
+          });
+          const x=  (pointer.x + selection.startX)/2;
+          const y = (pointer.y + selection.startY)/2;
+
+          rect.on('scaling', (event) => {
+            const newWidth = rect.width * rect.scaleX;
+            const newHeight = rect.height * rect.scaleY;
+          
+            rect.set({ 'width':newWidth, 'height':newHeight, 'scaleX':1, 'scaleY':1 });
+
+          });
+        
+          const text = new fabric.IText('Click to edit...', {
+            left: selection.startX,
+            top: selection.startY,
+            width,
+            height,
+            fill: 'transparent', // Set fill to transparent for an outline
+
+            selectable: true, // The selection area should not be selectable
+            fontFamily: 'Arial',
+            fill: '#000000',
+            editable: true,
+
+          });
+        
+          if(interactionMode==modes.SHAPE_ADD)
+          { 
+            canvas.add(rect);
+            canvas.setActiveObject(rect);
+          }
+          else{
+          
+            canvas.add(text);
+            canvas.setActiveObject(text);
+            text.enterEditing();
+            text.selectionStart = text.text.length; // Place cursor at the end of the text
+            text.selectionStyle = {
+              cursorColor: '#000000', // Set cursor color to black
+              cursorOpacity: 1, // Ensure cursor is visible
+              cursorDelay: 1, // Set cursor blink interval in milliseconds
+            };
+          
+          }
+          setInteractionMode(modes.SELECTION);
+          setSelection(null);
+        }else{
+          setSelection(null);
+          console.log("mouse up");
+        }
+    }
+    else if(interactionMode==modes.ERASING){
+      isPanning.current = false;
     }
   };
  
