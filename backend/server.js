@@ -47,7 +47,7 @@ io.on("connection", async (socket) => {
     })
 
     socket.on('disconnect', () => {
-        console.log('A user disconnected');
+        // console.log('A user disconnected');
         if(users[socket.id]==null) return;
         var name = users[socket.id].username;
         var room = users[socket.id].room;
