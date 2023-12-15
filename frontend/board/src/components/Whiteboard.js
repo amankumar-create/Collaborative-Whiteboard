@@ -1,31 +1,31 @@
-import React, { useState, useEffect, useRef  } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import { fabric } from "fabric";
 import { FaCaravan, FaPen } from "react-icons/fa";
 import { FaArrowPointer } from "react-icons/fa6";
 import { IoShapes } from "react-icons/io5";
 import { FaEraser } from "react-icons/fa6";
 import { MdTextFields } from "react-icons/md";
-import PropertiesToolbar from './PropertiesToolbar';
+import { FaHandPaper } from "react-icons/fa";
+import PropertiesToolbar from "./PropertiesToolbar";
 
 const modes = {
   DRAWING: "drawing",
   SELECTION: "selection",
-  ERASING:"erasing",
+  ERASING: "erasing",
   SHAPE_ADD: "shape-adding",
   BUCKET_FILL: "bucket-fill",
-  TEXT_ADD: "text-adding"
-}
+  TEXT_ADD: "text-adding",
+  PANNING: "panning",
+};
 
-function Whiteboard() {
-
+function Whiteboard({ socket }) {
   const canvasRef = useRef(null);
-  const [interactionMode, setInteractionMode] =  useState(modes.DRAWING);
+  const [interactionMode, setInteractionMode] = useState(modes.DRAWING);
   const [selection, setSelection] = useState(null);
   const [selectedObject, setSelectedObject] = useState(null);
   const isPanning = useRef(false);
   const lastX = useRef(0);
   const lastY = useRef(0);
-
 
   useEffect(() => {
     const canvas = new fabric.Canvas(canvasRef.current, {
@@ -34,11 +34,10 @@ function Whiteboard() {
       height: window.innerHeight,
       selection: false,
     });
-     
-     
+
     canvas.isDrawingMode = true;
-     
-    canvas.on('mouse:wheel', (event) => {
+
+    canvas.on("mouse:wheel", (event) => {
       const delta = event.e.deltaY;
       const zoom = canvas.getZoom();
       const zoomFactor = 1.1;
@@ -54,74 +53,97 @@ function Whiteboard() {
       event.e.preventDefault();
       event.e.stopPropagation();
     });
-
+    socket.on("canvas-data", (data) => {
+      handleCanvasData(canvas, data);
+    });
     canvasRef.current = canvas;
-   
+
     return () => {
-       
       // Cleanup code (if needed) when the component is unmounted
     };
   }, []);
 
-  useEffect(()=>{
+  useEffect(() => {
     const canvas = canvasRef.current;
-    console.log(interactionMode);
 
-    if(interactionMode== modes.DRAWING){
+    if (interactionMode == modes.DRAWING) {
       canvas.isDrawingMode = true;
-    }
-    else{
+    } else {
       canvas.isDrawingMode = false;
     }
-    if(interactionMode== modes.SELECTION){
+    if (interactionMode == modes.SELECTION) {
       canvas.selection = true;
-      canvas.on('selection:created', function(event) {
+      if (selectedObject != null) {
+        CenterOriginObject();
+      }
+      canvas.on("selection:created", function (event) {
         const obj = canvas.getActiveObject();
         setSelectedObject(obj);
-        const center = obj.getCenterPoint();
-        obj.originX ="center";
-        obj.originY ="center";
-        obj.left = center.x;
-        obj.top = center.y;
+        CenterOriginObject();
       });
-      canvas.on('selection:cleared', function(event) {
+      canvas.on("selection:cleared", function (event) {
         setSelectedObject(null);
       });
-    }
-    else{
+    } else {
       canvas.selection = false;
     }
-    
+  }, [interactionMode]);
 
-  }, [interactionMode] )
-
-  useEffect(()=>{
+  useEffect(() => {
     const canvas = canvasRef.current;
-    
-      canvas.on('mouse:down', handleMouseDown);
-      canvas.on('mouse:move', handleMouseMove);
-      canvas.on('mouse:up', handleMouseUp);
-    
+
+    canvas.on("mouse:down", handleMouseDown);
+    canvas.on("mouse:move", handleMouseMove);
+    canvas.on("mouse:up", handleMouseUp);
 
     return () => {
-      canvas.off('mouse:down', handleMouseDown);
-      canvas.off('mouse:move', handleMouseMove);
-      canvas.off('mouse:up', handleMouseUp);
+      canvas.off("mouse:down", handleMouseDown);
+      canvas.off("mouse:move", handleMouseMove);
+      canvas.off("mouse:up", handleMouseUp);
     };
-  }, [interactionMode,selection]);
-  
+  }, [interactionMode, selection]);
+
+  const handleCanvasData = (canvas, data) => {
+    // Apply received canvas data to the local canvas
+    // This may include adding objects, modifying properties, etc.
+    canvas.loadFromJSON(data, () => {
+      canvas.renderAll();
+    });
+  };
+
+  const sendCanvasData = () => {
+    // Send the current canvas data to the server
+    console.log("sending canvas data");
+    const canvasData = JSON.stringify(canvasRef.current.toDatalessJSON());
+    socket.emit("canvas-data", canvasData);
+  };
+
+  const CenterOriginObject = () => {
+    const canvas = canvasRef.current;
+    const obj = canvas.getActiveObject();
+    const center = obj.getCenterPoint();
+    obj.originX = "center";
+    obj.originY = "center";
+    obj.left = center.x;
+    obj.top = center.y;
+    console.log("origin centerd");
+  };
+
   const handleMouseDown = (event) => {
     const canvas = canvasRef.current;
     console.log("mouse down");
-    if(interactionMode==modes.SHAPE_ADD || interactionMode==modes.TEXT_ADD){
+    if (
+      interactionMode == modes.SHAPE_ADD ||
+      interactionMode == modes.TEXT_ADD
+    ) {
       const pointer = canvas.getPointer(event.e);
-      
+
       setSelection({
         startX: pointer.x,
         startY: pointer.y,
       });
     }
-    if(interactionMode==modes.ERASING){
+    if (interactionMode == modes.PANNING) {
       isPanning.current = true;
       lastX.current = event.e.clientX;
       lastY.current = event.e.clientY;
@@ -130,174 +152,220 @@ function Whiteboard() {
 
   const handleMouseMove = (event) => {
     const canvas = canvasRef.current;
-    if(interactionMode==modes.SHAPE_ADD || interactionMode==modes.TEXT_ADD){
-        if (selection==null ) return;
+    if (
+      interactionMode == modes.SHAPE_ADD ||
+      interactionMode == modes.TEXT_ADD
+    ) {
+      if (selection == null) return;
 
+      const pointer = canvas.getPointer(event.e);
+      const width = pointer.x - selection.startX;
+      const height = pointer.y - selection.startY;
 
-        const pointer = canvas.getPointer(event.e);
-        const width = pointer.x - selection.startX;
-        const height = pointer.y - selection.startY;
-        console.log(width, height);
-        if (!selection.rect) {
-          const rect = new fabric.Rect({
-            left: selection.startX,
-            top: selection.startY,
-            width,
-            height,
-            fill: 'transparent', // Set fill to transparent for an outline
-            stroke: 'rgba(0,0,255,0.3)', // Outline color
-            strokeWidth: 2, // Outline width 
-            selectable: false, // The selection area should not be selectable
-          });
-        
-          canvas.add(rect);
-          selection.rect = rect;
-        } else {
-          selection.rect.set({ width, height });
-          canvas.renderAll();
-        }
+      if (!selection.rect) {
+        const rect = new fabric.Rect({
+          left: selection.startX,
+          top: selection.startY,
+          width,
+          height,
+          fill: "transparent", // Set fill to transparent for an outline
+          stroke: "rgba(0,0,255,0.3)", // Outline color
+          strokeWidth: 2, // Outline width
+          selectable: false, // The selection area should not be selectable
+        });
+
+        canvas.add(rect);
+        selection.rect = rect;
+      } else {
+        selection.rect.set({ width, height });
+        canvas.renderAll();
       }
-      else if(interactionMode==modes.ERASING){
-        if (isPanning.current) {
-          const deltaX = event.e.clientX - lastX.current;
-          const deltaY = event.e.clientY - lastY.current;
-  
-          canvas.relativePan(new fabric.Point(deltaX, deltaY));
-          lastX.current = event.e.clientX;
-          lastY.current = event.e.clientY;
-        }
+    } else if (interactionMode == modes.PANNING) {
+      if (isPanning.current) {
+        const deltaX = event.e.clientX - lastX.current;
+        const deltaY = event.e.clientY - lastY.current;
+
+        canvas.relativePan(new fabric.Point(deltaX, deltaY));
+        lastX.current = event.e.clientX;
+        lastY.current = event.e.clientY;
       }
+    }
   };
 
   const handleMouseUp = (event) => {
-    if(interactionMode==modes.SHAPE_ADD || interactionMode==modes.TEXT_ADD){
-        if (selection!=null && selection.rect!=null) {
-          const canvas = canvasRef.current;
-          canvas.remove(selection.rect);
-          const pointer = canvas.getPointer(event.e);
-          const width = pointer.x - selection.startX;
-          const height = pointer.y - selection.startY;
+    if (
+      interactionMode == modes.SHAPE_ADD ||
+      interactionMode == modes.TEXT_ADD
+    ) {
+      if (selection != null && selection.rect != null) {
+        const canvas = canvasRef.current;
+        canvas.remove(selection.rect);
+        const pointer = canvas.getPointer(event.e);
+        const width = pointer.x - selection.startX;
+        const height = pointer.y - selection.startY;
 
+        const rect = new fabric.Rect({
+          left: selection.startX,
+          top: selection.startY,
+          width,
+          height,
+          fill: "transparent", // Set fill to transparent for an outline
+          stroke: "rgba(0,0,0,1)", // Outline color
+          strokeWidth: 10, // Outline width
+          selectable: true, // The selection area should not be selectable
+        });
+        const x = (pointer.x + selection.startX) / 2;
+        const y = (pointer.y + selection.startY) / 2;
 
-          const rect = new fabric.Rect({
-            left: selection.startX,
-            top: selection.startY,
-            width,
-            height,
-            fill: 'transparent', // Set fill to transparent for an outline
-            stroke: 'rgba(0,0,0,1)', // Outline color
-            strokeWidth: 10, // Outline width 
-            selectable: true, // The selection area should not be selectable
-          
+        rect.on("scaling", (event) => {
+          //console.log("being scaled");
+          const newWidth = rect.width * rect.scaleX;
+          const newHeight = rect.height * rect.scaleY;
 
+          rect.set({
+            width: newWidth,
+            height: newHeight,
+            scaleX: 1,
+            scaleY: 1,
           });
-          const x=  (pointer.x + selection.startX)/2;
-          const y = (pointer.y + selection.startY)/2;
+        });
 
-          rect.on('scaling', (event) => {
-            const newWidth = rect.width * rect.scaleX;
-            const newHeight = rect.height * rect.scaleY;
-          
-            rect.set({ 'width':newWidth, 'height':newHeight, 'scaleX':1, 'scaleY':1 });
+        const text = new fabric.IText("Click to edit...", {
+          left: selection.startX,
+          top: selection.startY,
+          width,
+          height,
+          fill: "transparent", // Set fill to transparent for an outline
 
-          });
-        
-          const text = new fabric.IText('Click to edit...', {
-            left: selection.startX,
-            top: selection.startY,
-            width,
-            height,
-            fill: 'transparent', // Set fill to transparent for an outline
+          selectable: true, // The selection area should not be selectable
+          fontFamily: "Arial",
+          fill: "#000000",
+          editable: true,
+        });
 
-            selectable: true, // The selection area should not be selectable
-            fontFamily: 'Arial',
-            fill: '#000000',
-            editable: true,
-
-          });
-        
-          if(interactionMode==modes.SHAPE_ADD)
-          { 
-            canvas.add(rect);
-            canvas.setActiveObject(rect);
-          }
-          else{
-          
-            canvas.add(text);
-            canvas.setActiveObject(text);
-            text.enterEditing();
-            text.selectionStart = text.text.length; // Place cursor at the end of the text
-            text.selectionStyle = {
-              cursorColor: '#000000', // Set cursor color to black
-              cursorOpacity: 1, // Ensure cursor is visible
-              cursorDelay: 1, // Set cursor blink interval in milliseconds
-            };
-          
-          }
-          setInteractionMode(modes.SELECTION);
-          setSelection(null);
-        }else{
-          setSelection(null);
-          console.log("mouse up");
+        if (interactionMode == modes.SHAPE_ADD) {
+          canvas.add(rect);
+          canvas.setActiveObject(rect);
+          setSelectedObject(rect);
+        } else {
+          canvas.add(text);
+          canvas.setActiveObject(text);
+          text.enterEditing();
+          text.selectionStart = text.text.length; // Place cursor at the end of the text
+          text.selectionStyle = {
+            cursorColor: "#000000", // Set cursor color to black
+            cursorOpacity: 1, // Ensure cursor is visible
+            cursorDelay: 1, // Set cursor blink interval in milliseconds
+          };
         }
-    }
-    else if(interactionMode==modes.ERASING){
+        setSelection(null);
+        setInteractionMode(modes.SELECTION);
+      } else {
+        setSelection(null);
+        //console.log("mouse up");
+      }
+    } else if (interactionMode == modes.PANNING) {
       isPanning.current = false;
     }
+
+    sendCanvasData();
   };
- 
-   
+
   const handleToggleMode = (event) => {
- 
-    switch(event.currentTarget.id){
-      case 'drawing':
+    switch (event.currentTarget.id) {
+      case "drawing":
         setInteractionMode(modes.DRAWING);
         break;
 
-      case 'selection':
+      case "selection":
         setInteractionMode(modes.SELECTION);
         break;
 
-      case 'shape-adding':
+      case "shape-adding":
         setInteractionMode(modes.SHAPE_ADD);
         break;
-      
-      case 'text-adding':
+
+      case "text-adding":
         setInteractionMode(modes.TEXT_ADD);
         break;
 
-      case 'erasing':
+      case "erasing":
         setInteractionMode(modes.ERASING);
+        break;
+
+      case "panning":
+        setInteractionMode(modes.PANNING);
         break;
 
       default:
         setInteractionMode(modes.SELECTION);
-
     }
-
   };
-  if(canvasRef){
-    if(canvasRef.current){
-      console.log("Canvas ref not null");
-    }
-  }
+
   return (
     <div>
       <canvas ref={canvasRef} />
-      <div className='Toolbar'>
-        <button id='drawing' className={`tool ${interactionMode==modes.DRAWING?"selected":""}`}  onClick={handleToggleMode}><FaPen className='icon'/></button>
-        <button id='selection' className={`tool ${interactionMode==modes.SELECTION?"selected":""}`} onClick={handleToggleMode}><FaArrowPointer className='icon'/></button>
-        <button id ='shape-adding' className={`tool ${interactionMode==modes.SHAPE_ADD?"selected":""}`} onClick={handleToggleMode}><IoShapes className='icon'/></button>
-        <button id ='text-adding' className={`tool ${interactionMode==modes.TEXT_ADD?"selected":""}`} onClick={handleToggleMode}><MdTextFields className='icon'/></button>
-        <button id ='erasing' className={`tool ${interactionMode==modes.ERASING?"selected":""}`} onClick={handleToggleMode}><FaEraser className='icon'/></button>
-          
+      <div className="Toolbar">
+        <button
+          id="drawing"
+          className={`tool ${
+            interactionMode == modes.DRAWING ? "selected" : ""
+          }`}
+          onClick={handleToggleMode}
+        >
+          <FaPen className="icon" />
+        </button>
+        <button
+          id="selection"
+          className={`tool ${
+            interactionMode == modes.SELECTION ? "selected" : ""
+          }`}
+          onClick={handleToggleMode}
+        >
+          <FaArrowPointer className="icon" />
+        </button>
+        <button
+          id="shape-adding"
+          className={`tool ${
+            interactionMode == modes.SHAPE_ADD ? "selected" : ""
+          }`}
+          onClick={handleToggleMode}
+        >
+          <IoShapes className="icon" />
+        </button>
+        <button
+          id="text-adding"
+          className={`tool ${
+            interactionMode == modes.TEXT_ADD ? "selected" : ""
+          }`}
+          onClick={handleToggleMode}
+        >
+          <MdTextFields className="icon" />
+        </button>
+        <button
+          id="erasing"
+          className={`tool ${
+            interactionMode == modes.ERASING ? "selected" : ""
+          }`}
+          onClick={handleToggleMode}
+        >
+          <FaEraser className="icon" />
+        </button>
+        <button
+          id="panning"
+          className={`tool ${
+            interactionMode == modes.PANNING ? "selected" : ""
+          }`}
+          onClick={handleToggleMode}
+        >
+          <FaHandPaper className="icon" />
+        </button>
       </div>
-      {
-        selectedObject==null?"":<PropertiesToolbar canvas={canvasRef.current}></PropertiesToolbar>
-      }
-      
-       
-      
+      {selectedObject == null ? (
+        ""
+      ) : (
+        <PropertiesToolbar canvas={canvasRef.current}></PropertiesToolbar>
+      )}
     </div>
   );
 }

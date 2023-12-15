@@ -21,6 +21,7 @@ const PropertiesToolbar = ({canvas})=>{
     const [selectingShape, setSelectingShape] = useState(false);
     
     useEffect(()=>{
+        updateToolbarPosition();
         const obj = canvas.getActiveObject();
         if(obj.type=="rect" && obj.rx != 0 ){
             setSelectedShape(shapes.ELPS);
@@ -30,8 +31,7 @@ const PropertiesToolbar = ({canvas})=>{
 
         setStrokeThickness(obj.strokeWidth);
         setStrokeColor(obj.stroke);
-        updateToolbarPosition();
-        console.log("selected shape " + selectedShape, "active "+obj.type);
+        //console.log("selected shape " + selectedShape, "active "+obj.type);
        
         canvas.on('mouse:up', ()=>{
             updateToolbarPosition();
@@ -39,11 +39,11 @@ const PropertiesToolbar = ({canvas})=>{
     },[]);
 
     useEffect(()=>{
-        console.log(selectedShape)
+        //console.log(selectedShape)
         const obj = canvas.getActiveObject();
-        console.log(obj.type);
+        //console.log(obj.type);
         if(selectedShape == shapes.RECT ){
-            console.log("you are here");
+            //console.log("you are here");
             const recta = new fabric.Rect({...obj,
                 radius:0,
                 rx:0,
@@ -78,8 +78,8 @@ const PropertiesToolbar = ({canvas})=>{
             const rect = new fabric.Rect({...obj,
                 left: obj.left,
                 top: obj.top,
-                rx :obj.width/10,
-                ry: obj.height/10
+                rx : Math.min(obj.width,obj.height)/10,
+                ry: Math.min(obj.width,obj.height)/10
               });
               canvas.add(rect);
               canvas.setActiveObject(rect);
@@ -104,7 +104,7 @@ const PropertiesToolbar = ({canvas})=>{
          canvas.renderAll();
         
     }, [strokeThickness, strokeColor]);
-
+    
     function updateToolbarPosition() {
         const objectInFocus = canvas.getActiveObject();
         if(objectInFocus==null) return;

@@ -8,6 +8,12 @@ const io = require("socket.io")(server, {
 
 const users = {};
 
+const getActiveUsersInARoom = (users, roomid) => {
+    return Object.fromEntries(
+      Object.entries(users).filter(([key, value]) => value.room==roomid)
+    );
+  }; 
+
 io.on("connection", async (socket) => {
     socket.once('joinRoom', ({ username, roomid }) => {
         users[socket.id] = {};
@@ -20,8 +26,9 @@ io.on("connection", async (socket) => {
             type : "new_user", 
             sender: username
         });
+
         io.to(roomid).emit('updateUserList', {
-            activeUsers: users
+            activeUsers: getActiveUsersInARoom(users, roomid)
         })
 
     })
@@ -51,9 +58,13 @@ io.on("connection", async (socket) => {
             sender: name
         });
         io.to(room).emit('updateUserList', {
-            activeUsers: users
+            activeUsers: getActiveUsersInARoom(users, room)
         })
 
+      });
+
+      socket.on('canvas-data', (data)=>{
+        socket.broadcast.emit('canvas-data', data);
       });
 
 });
