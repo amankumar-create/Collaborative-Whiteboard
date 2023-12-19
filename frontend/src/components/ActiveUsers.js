@@ -9,28 +9,36 @@ const ActiveUsers = ({ socket }) => {
       setUserList(payload.activeUsers);
     });
   }, []);
-
+ 
   return (
     <div>
       <div className={`ActiveUsers ${collapsed ? "collapsed" : ""}`}>
-        <h3>User List</h3>
-        {Object.entries(userList).map(([userId, user], index) => (
-          <div className="UserItem">
-            <li style={{ margin: "8px" }} key={index}>
-              {index} :{user.username}
-            </li>
-          </div>
-        ))}
+        <h3 style={{ margin: "10px" }}> User List</h3>
+        <hr style={{height:"2px"}}/>
+        
+        <div style={{padding:"10px"}}>
+          {Object.entries(userList).map(([userId, user], index) => (
+            <div className="UserItem">
+              <li style={{ margin: "8px" }} key={index}>
+                {index+1} :{user.username}{socket.id==userId?" (You)":""}
+              </li>
+            </div>
+          ))}
+        </div>
+        {Object.keys(userList).length==1?
+          <div style={{height:"50vh" ,display:"flex", alignItems:"center", justifyContent:"center"}}>
+            No one here yet
+          </div>:""
+        }
       </div>
       <button
         className="Toggle-Collapse Users-Button"
-        style={{ position: "fixed", bottom: "12px", left: "15px", width:'40px', height:'40px', background:'white', borderRadius:'20px'}}
         onClick={() => {
           setCollapsed(!collapsed);
           console.log(collapsed);
         }}
       >
-        <BsFillPeopleFill className="icon"/>
+        <BsFillPeopleFill className="icon" />
       </button>
     </div>
   );
