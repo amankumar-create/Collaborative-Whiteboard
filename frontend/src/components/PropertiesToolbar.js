@@ -97,6 +97,7 @@ const PropertiesToolbar = ({canvas})=>{
             
           });
         canvas.renderAll();
+        console.log("id = "+ obj1.id);
     }, [selectedShape])
     useEffect(()=>{
         const object = canvas.getActiveObject() ;

@@ -67,6 +67,11 @@ io.on("connection", async (socket) => {
         socket.broadcast.emit('canvas-data', data);
       });
 
+      //---------------------------
+      socket.on('canvas-update', (data)=>{
+        socket.broadcast.emit('canvas-update', data);
+      });
+
 });
 const port = process.env.PORT || 5000;
 server.listen(port, () => {

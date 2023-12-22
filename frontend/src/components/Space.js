@@ -3,12 +3,12 @@ import { nanoid } from "nanoid";
 import { useState, useEffect, memo } from "react";
 import "../App.css";
 import Chats from "./Chats";
-import Canvas from "./Canvas";
+ 
 import ActiveUsers from "./ActiveUsers";
 import Whiteboard from "./Whiteboard";
 
-// const socket = io.connect("http://localhost:5000");
-const socket = io.connect("https://whiteboardbackend-mc0t.onrender.com");
+const socket = io.connect("http://localhost:5000");
+// const socket = io.connect("https://whiteboardbackend-mc0t.onrender.com");
 
 const Space = ({ username, roomid }) => {
     

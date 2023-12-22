@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { fabric } from "fabric";
-import { FaCaravan, FaPen } from "react-icons/fa";
+import { FaCaravan, FaPen, FaUnderline } from "react-icons/fa";
 import { FaArrowPointer } from "react-icons/fa6";
 import { IoShapes } from "react-icons/io5";
 import { FaEraser } from "react-icons/fa6";
@@ -37,6 +37,7 @@ function Whiteboard({ socket }) {
 
     canvas.isDrawingMode = true;
 
+    //-------------------------------------------- for panning---------------------------------------------------------------------------------
     canvas.on("mouse:wheel", (event) => {
       const delta = event.e.deltaY;
       const zoom = canvas.getZoom();
@@ -53,9 +54,36 @@ function Whiteboard({ socket }) {
       event.e.preventDefault();
       event.e.stopPropagation();
     });
-    socket.on("canvas-data", (data) => {
-      handleCanvasData(canvas, data);
+    //---------------------------------------------------------------------------------------------------------------------------------------
+
+    // canvas.on('path:created',function(e) {  
+
+
+    // });
+
+    canvas.on('object:added', function (e) {
+      if (e.target.id === undefined) {
+        e.target.set('id', randomHash());
+        sendCanvasUpdate(e.target);
+      }
     });
+
+    canvas.on('object:modified', function(e){
+      console.log('modified');
+    });
+
+    //------------------------------------------------------------------------------------------------------------------------------------------------
+    // socket.on("canvas-data", (data) => {
+    //   handleCanvasData(canvas, data);
+    // });
+
+
+    //------------------------------------------------------------------------------------------------------------------------------------------------
+    socket.on("canvas-update", (data) => {
+      handleCanvasUpdateReceived(canvas, data);
+    })
+
+    //------------------------------------------------------------------------------------------------------------------------------------------------
     canvasRef.current = canvas;
 
     return () => {
@@ -111,6 +139,24 @@ function Whiteboard({ socket }) {
     });
   };
 
+  const handleCanvasUpdateReceived = (canvas, data) => {
+    var parsedObject = JSON.parse(data);
+    console.log(parsedObject);
+    var objectsArray = [parsedObject];
+
+    // Deserialize the Fabric.js object
+    fabric.util.enlivenObjects(objectsArray, function(objects) {
+         
+        canvas.add(objects[0]);
+        canvas.renderAll();
+    });
+  }
+
+  const randomHash = () => {
+    var id = "id" + Math.random().toString(16).slice(2);
+    return id;
+  }
+
   const sendCanvasData = () => {
     // Send the current canvas data to the server
     console.log("sending canvas data");
@@ -118,6 +164,23 @@ function Whiteboard({ socket }) {
     socket.emit("canvas-data", canvasData);
   };
 
+  const sendCanvasUpdate = (obj) => {
+    if (obj == null) return;
+    const objectData = JSON.stringify(obj.toJSON(['id']));
+    console.log(objectData);
+    socket.emit('canvas-update', objectData);
+  }
+
+  fabric.Canvas.prototype.getObjectById = function (id) {
+    var objs = this.getObjects();
+    for (var i = 0, len = objs.length; i < len; i++) {
+      if (objs[i].id == id) {
+        return objs[i];
+      }
+    }
+
+    return null;
+  };
   const CenterOriginObject = () => {
     const canvas = canvasRef.current;
     const obj = canvas.getActiveObject();
@@ -214,6 +277,9 @@ function Whiteboard({ socket }) {
           strokeWidth: 10, // Outline width
           selectable: true, // The selection area should not be selectable
         });
+
+        //rect.set('id', randomHash());
+
         const x = (pointer.x + selection.startX) / 2;
         const y = (pointer.y + selection.startY) / 2;
 
@@ -242,6 +308,7 @@ function Whiteboard({ socket }) {
           fill: "#000000",
           editable: true,
         });
+        //text.set('id', randomHash());
 
         if (interactionMode == modes.SHAPE_ADD) {
           canvas.add(rect);
@@ -268,7 +335,7 @@ function Whiteboard({ socket }) {
       isPanning.current = false;
     }
 
-    sendCanvasData();
+    // sendCanvasData();
   };
 
   const handleToggleMode = (event) => {
@@ -308,54 +375,48 @@ function Whiteboard({ socket }) {
       <div className="Toolbar">
         <button
           id="drawing"
-          className={`tool ${
-            interactionMode == modes.DRAWING ? "selected" : ""
-          }`}
+          className={`tool ${interactionMode == modes.DRAWING ? "selected" : ""
+            }`}
           onClick={handleToggleMode}
         >
           <FaPen className="icon" />
         </button>
         <button
           id="selection"
-          className={`tool ${
-            interactionMode == modes.SELECTION ? "selected" : ""
-          }`}
+          className={`tool ${interactionMode == modes.SELECTION ? "selected" : ""
+            }`}
           onClick={handleToggleMode}
         >
           <FaArrowPointer className="icon" />
         </button>
         <button
           id="shape-adding"
-          className={`tool ${
-            interactionMode == modes.SHAPE_ADD ? "selected" : ""
-          }`}
+          className={`tool ${interactionMode == modes.SHAPE_ADD ? "selected" : ""
+            }`}
           onClick={handleToggleMode}
         >
           <IoShapes className="icon" />
         </button>
         <button
           id="text-adding"
-          className={`tool ${
-            interactionMode == modes.TEXT_ADD ? "selected" : ""
-          }`}
+          className={`tool ${interactionMode == modes.TEXT_ADD ? "selected" : ""
+            }`}
           onClick={handleToggleMode}
         >
           <MdTextFields className="icon" />
         </button>
         <button
           id="erasing"
-          className={`tool ${
-            interactionMode == modes.ERASING ? "selected" : ""
-          }`}
+          className={`tool ${interactionMode == modes.ERASING ? "selected" : ""
+            }`}
           onClick={handleToggleMode}
         >
           <FaEraser className="icon" />
         </button>
         <button
           id="panning"
-          className={`tool ${
-            interactionMode == modes.PANNING ? "selected" : ""
-          }`}
+          className={`tool ${interactionMode == modes.PANNING ? "selected" : ""
+            }`}
           onClick={handleToggleMode}
         >
           <FaHandPaper className="icon" />
