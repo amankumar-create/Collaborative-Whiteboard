@@ -12,7 +12,7 @@ const shapes = {
     ELPS:"ellipse"
 }
 
-const PropertiesToolbar = ({canvas})=>{
+const PropertiesToolbar = ({sendCanvasUpdate ,canvas})=>{
  
     const [selectedShape, setSelectedShape] = useState();
     const [toolbarPosition, setToolbarPosition] = useState({left:0, top:0});
@@ -32,7 +32,8 @@ const PropertiesToolbar = ({canvas})=>{
         setStrokeThickness(obj.strokeWidth);
         setStrokeColor(obj.stroke);
         //console.log("selected shape " + selectedShape, "active "+obj.type);
-       
+        sendCanvasUpdate(obj, "modify");
+        
         canvas.on('mouse:up', ()=>{
             updateToolbarPosition();
         });
@@ -98,11 +99,13 @@ const PropertiesToolbar = ({canvas})=>{
           });
         canvas.renderAll();
         console.log("id = "+ obj1.id);
+        sendCanvasUpdate(obj1, "modify");
     }, [selectedShape])
     useEffect(()=>{
         const object = canvas.getActiveObject() ;
         object.set({'strokeWidth':strokeThickness ,'stroke' : strokeColor});
          canvas.renderAll();
+         sendCanvasUpdate(object, "modify");
         
     }, [strokeThickness, strokeColor]);
     

@@ -64,12 +64,15 @@ function Whiteboard({ socket }) {
     canvas.on('object:added', function (e) {
       if (e.target.id === undefined) {
         e.target.set('id', randomHash());
-        sendCanvasUpdate(e.target);
+        sendCanvasUpdate(e.target, "add");
       }
     });
 
     canvas.on('object:modified', function(e){
-      console.log('modified');
+      
+        
+        sendCanvasUpdate(e.target, "modify");
+     
     });
 
     //------------------------------------------------------------------------------------------------------------------------------------------------
@@ -131,19 +134,26 @@ function Whiteboard({ socket }) {
     };
   }, [interactionMode, selection]);
 
-  const handleCanvasData = (canvas, data) => {
-    // Apply received canvas data to the local canvas
-    // This may include adding objects, modifying properties, etc.
-    canvas.loadFromJSON(data, () => {
-      canvas.renderAll();
-    });
-  };
+  // const handleCanvasData = (canvas, data) => {
+  //   // Apply received canvas data to the local canvas
+  //   // This may include adding objects, modifying properties, etc.
+  //   canvas.loadFromJSON(data, () => {
+  //     canvas.renderAll();
+  //   });
+  // };
 
   const handleCanvasUpdateReceived = (canvas, data) => {
-    var parsedObject = JSON.parse(data);
+    const eventType = data.eventType
+    var parsedObject = JSON.parse(data.objectData);
+    const id = parsedObject.id;
     console.log(parsedObject);
     var objectsArray = [parsedObject];
-
+    const obj = fabric.Canvas.prototype.getObjectById(id);
+    console.log(eventType);
+    if(obj!=null){
+      console.log(obj)
+      canvas.remove(obj);
+    }
     // Deserialize the Fabric.js object
     fabric.util.enlivenObjects(objectsArray, function(objects) {
          
@@ -164,16 +174,18 @@ function Whiteboard({ socket }) {
     socket.emit("canvas-data", canvasData);
   };
 
-  const sendCanvasUpdate = (obj) => {
+  const sendCanvasUpdate = (obj, eventType) => {
     if (obj == null) return;
     const objectData = JSON.stringify(obj.toJSON(['id']));
-    console.log(objectData);
-    socket.emit('canvas-update', objectData);
+    //console.log(objectData);
+    socket.emit('canvas-update', {eventType:eventType , objectData:objectData});
   }
 
   fabric.Canvas.prototype.getObjectById = function (id) {
-    var objs = this.getObjects();
+    var objs = canvasRef.current.getObjects();
+    console.log(objs.length);
     for (var i = 0, len = objs.length; i < len; i++) {
+      console.log(objs[i].id);
       if (objs[i].id == id) {
         return objs[i];
       }
@@ -425,7 +437,7 @@ function Whiteboard({ socket }) {
       {selectedObject == null ? (
         ""
       ) : (
-        <PropertiesToolbar canvas={canvasRef.current}></PropertiesToolbar>
+        <PropertiesToolbar sendCanvasUpdate = {sendCanvasUpdate} canvas={canvasRef.current}></PropertiesToolbar>
       )}
     </div>
   );
