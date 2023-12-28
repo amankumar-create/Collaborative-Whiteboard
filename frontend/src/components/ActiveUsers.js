@@ -19,7 +19,7 @@ const ActiveUsers = ({ socket }) => {
         <div style={{padding:"10px"}}>
           {Object.entries(userList).map(([userId, user], index) => (
             <div className="UserItem">
-              <li style={{ margin: "8px" }} key={index}>
+              <li  key={index}>
                 {index+1} :{user.username}{socket.id==userId?" (You)":""}
               </li>
             </div>

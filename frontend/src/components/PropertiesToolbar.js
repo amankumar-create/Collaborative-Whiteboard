@@ -5,6 +5,8 @@ import { IoTriangleOutline } from "react-icons/io5";
 import { PiRectangle } from "react-icons/pi";
 import { RxBox } from "react-icons/rx";
 import { fabric } from "fabric";
+
+
 const shapes = {
     CIRC: "circle",
     RECT:"rect",
@@ -59,7 +61,17 @@ const PropertiesToolbar = ({sendCanvasUpdate ,canvas})=>{
                 left: obj.left,
                 top: obj.top,
                 radius: Math.min(obj.width, obj.height) / 2,
+                centeredScaling:true
               });
+
+              circle.on("scaling", (event) => {
+                 
+                circle.set({
+                  radius : Math.min(circle.width, circle.height) / 2,
+               
+                });
+              });
+
               canvas.add(circle);
               canvas.setActiveObject(circle);
               canvas.remove(obj);
@@ -87,6 +99,8 @@ const PropertiesToolbar = ({sendCanvasUpdate ,canvas})=>{
               canvas.remove(obj);
         }
         const obj1 = canvas.getActiveObject();
+        console.log(selectedShape);
+        if(obj1.type!="path")
         obj1.on('scaling', (event) => {
             const newWidth = obj1.width * obj1.scaleX;
             const newHeight = obj1.height * obj1.scaleY;
@@ -153,7 +167,7 @@ const PropertiesToolbar = ({sendCanvasUpdate ,canvas})=>{
     }
     return(
         <> 
-        <div className='Toolbar' style={{left:`${toolbarPosition.left}px`, top:`${toolbarPosition.top}px`}}>
+        <div className='Toolbar' style={{left:`${toolbarPosition.left}px`, top:`${toolbarPosition.top}px`,}}>
             {
                 (selectedShape=="rect" ||selectedShape=="circle" ||selectedShape=="triangle" || selectedShape=="ellipse")?shapeTool:""
             }

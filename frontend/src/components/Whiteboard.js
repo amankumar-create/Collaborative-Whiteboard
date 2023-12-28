@@ -6,6 +6,9 @@ import { IoShapes } from "react-icons/io5";
 import { FaEraser } from "react-icons/fa6";
 import { MdTextFields } from "react-icons/md";
 import { FaHandPaper } from "react-icons/fa";
+import { LiaEraserSolid } from "react-icons/lia";
+import eraserCursorImage from './eraser.png';
+
 import PropertiesToolbar from "./PropertiesToolbar";
 
 const modes = {
@@ -24,6 +27,7 @@ function Whiteboard({ socket }) {
   const [selection, setSelection] = useState(null);
   const [selectedObject, setSelectedObject] = useState(null);
   const isPanning = useRef(false);
+  const isErasing = useRef(false);
   const lastX = useRef(0);
   const lastY = useRef(0);
 
@@ -36,6 +40,7 @@ function Whiteboard({ socket }) {
     });
 
     canvas.isDrawingMode = true;
+    canvas.freeDrawingBrush.width = 3;
 
     //-------------------------------------------- for panning---------------------------------------------------------------------------------
     canvas.on("mouse:wheel", (event) => {
@@ -62,6 +67,7 @@ function Whiteboard({ socket }) {
     // });
 
     canvas.on('object:added', function (e) {
+
       if (e.target.id === undefined) {
         e.target.set('id', randomHash());
         sendCanvasUpdate(e.target, "add");
@@ -99,6 +105,7 @@ function Whiteboard({ socket }) {
 
     if (interactionMode == modes.DRAWING) {
       canvas.isDrawingMode = true;
+      
     } else {
       canvas.isDrawingMode = false;
     }
@@ -118,6 +125,17 @@ function Whiteboard({ socket }) {
     } else {
       canvas.selection = false;
     }
+
+    if(interactionMode==modes.ERASING){
+      canvas.set('perPixelTargetFind', true);
+      canvas.defaultCursor = `url(${eraserCursorImage}) 10 10, auto`
+    }
+    else{
+      canvas.set('perPixelTargetFind', false);
+      canvas.defaultCursor = `default`
+    }
+
+
   }, [interactionMode]);
 
   useEffect(() => {
@@ -223,6 +241,9 @@ function Whiteboard({ socket }) {
       lastX.current = event.e.clientX;
       lastY.current = event.e.clientY;
     }
+    if(interactionMode==modes.ERASING){
+      isErasing.current = true;
+    }
   };
 
   const handleMouseMove = (event) => {
@@ -265,6 +286,11 @@ function Whiteboard({ socket }) {
         lastY.current = event.e.clientY;
       }
     }
+    else if(interactionMode==modes.ERASING){
+      if(isErasing.current)
+      canvas.remove(event.target);
+      //console.log(event.target)
+    }
   };
 
   const handleMouseUp = (event) => {
@@ -286,8 +312,9 @@ function Whiteboard({ socket }) {
           height,
           fill: "transparent", // Set fill to transparent for an outline
           stroke: "rgba(0,0,0,1)", // Outline color
-          strokeWidth: 10, // Outline width
+          strokeWidth: 3, // Outline width
           selectable: true, // The selection area should not be selectable
+          
         });
 
         //rect.set('id', randomHash());
@@ -345,6 +372,9 @@ function Whiteboard({ socket }) {
       }
     } else if (interactionMode == modes.PANNING) {
       isPanning.current = false;
+    }
+    else if(interactionMode==modes.ERASING){
+      isErasing.current = false;
     }
 
     // sendCanvasData();

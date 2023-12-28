@@ -4,11 +4,11 @@ import "../App.css";
 
 export default function Chats({ socket, username, roomid }) {
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState([{message:"Welcome", type:"welcome"}]);
   const [collapsed, setCollapsed] = useState(false);
 
   socket.on("message", (payload) => {
-    console.log(payload.message);
+    console.log(payload.senderId);
     setMessages([...messages, payload]);
   });
 
@@ -30,23 +30,39 @@ export default function Chats({ socket, username, roomid }) {
       <div className={`Chatbox ${collapsed ? "collapsed" : ""}`}>
         <div className="Messages">
           {messages.map((msg, index) => (
-            <div key={index} className={`Message ${msg.type}`}>
-              {msg.type === "user_message" && (
-                <div style={{ margin: "8px" }}>
-                  <strong style={{ color: "#138D75" }}>{msg.sender}:</strong>{" "}
-                  {msg.message}
-                </div>
-              )}
-              {msg.type === "new_user" && (
-                <div style={{ margin: "8px" }}>
-                  <strong style={{ color: "green" }}>{msg.message}</strong>
-                </div>
-              )}
-              {msg.type === "user_left" && (
-                <div style={{ margin: "8px" }}>
-                  <strong style={{ color: "#E74C3C" }}>{msg.message}</strong>
-                </div>
-              )}
+            <div
+              style={{
+                display: "flex",
+                justifyContent:
+                  msg.type=="user_message"?
+                  (socket.id == msg.senderId ? "flex-end" : "flex-start"):
+                  "center"
+                  ,
+              }}
+            >
+              <div key={index} className={`message-container ${msg.type}`}>
+                {msg.type === "user_message" && (
+                  <div>
+                    <div className="sender-name">{msg.sender}</div>{" "}
+                    <div className="message-body">{msg.message}</div>
+                  </div>
+                )}
+                {msg.type === "new_user" && (
+                  <div>
+                    <div className="message-body" style={{fontSize:"small"}}>{msg.message}</div>
+                  </div>
+                )}
+                {msg.type === "user_left" && (
+                  <div >
+                    <div className="message-body" style={{fontSize:"small"}}>{msg.message}</div>
+                  </div>
+                )}
+                {msg.type === "welcome" && (
+                  <div >
+                    <div className="message-body" style={{fontSize:"small"}}>{msg.message}</div>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -67,7 +83,7 @@ export default function Chats({ socket, username, roomid }) {
           console.log(collapsed);
         }}
       >
-        <IoIosChatboxes className="icon"/>
+        <IoIosChatboxes className="icon" />
       </button>
     </div>
   );

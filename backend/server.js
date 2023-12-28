@@ -37,7 +37,8 @@ io.on("connection", async (socket) => {
         io.to(payload.room).emit('message',{
             message: payload.message, 
             type:"user_message",
-            sender:users[socket.id].username
+            sender:users[socket.id].username,
+            senderId: socket.id
         });
     })
     socket.on('drawing', (payload) => {

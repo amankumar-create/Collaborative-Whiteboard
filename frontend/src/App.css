@@ -17,11 +17,11 @@
   background-color: rgba(234, 234, 234, 0.666);
   backdrop-filter: blur(15px);
   box-shadow: 1px 3px 8px 4px rgba(0, 0, 0, 0.2);
- 
+  font-family: Arial, sans-serif;
   overflow: hidden;
   transition:height 0.3s ease-in-out, width  0.3s ease-in-out;
  
-  z-index: 2;
+  z-index: 1;
 }
 
 .Chatbox.collapsed{
@@ -58,6 +58,45 @@
  
 }
 
+.message-container {
+  display: inline-block;
+  padding: 8px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 10px;
+  word-wrap: break-word;
+}
+ 
+.message-body {
+  font-size: 15px;
+
+}
+
+.sender-name {
+  font-size: 12px;
+  font-weight: 1000;
+  color: #666;
+ 
+}
+
+.new_user{
+  font-size: smaller;
+  background-color: #307de87c;
+  border-radius: 100px;
+}
+.user_left{
+  font-size: smaller;
+  background-color: #e830307c;
+  border-radius: 100px;
+
+}
+.welcome{
+  font-size: smaller;
+  background-color: #3fe8307c;
+  border-radius: 100px;
+}
+
 .InputContainer {
   display: flex;
   align-items: center;
@@ -69,7 +108,7 @@
 }
 
 .InputContainer input {
- 
+  width: 100%;
   margin-right: 10px;
   padding: 8px;
   font-size: 16px;
@@ -120,12 +159,12 @@
   left: 1vw;
 }
 .UserItem {
+  padding: 8px;
   background-color: #fff;
   border-radius: 8px;
-  box-shadow: 0 0 2px 2px #eaeaea;
-  padding: 2px;
-  word-wrap: break-word;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 10px;
+  word-wrap: break-word;
   list-style-type: none;
   font-weight: bold;
 }
@@ -135,7 +174,7 @@
 }
 
 .Toolbar {
-  height: 30px;
+  height: 43px;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -148,10 +187,9 @@
   backdrop-filter: blur(8px);
   /* border: 1px solid rgba(0, 0, 0, 0.5);  */
   border-radius: 10px;
-  padding: 10px;
-
+  padding: 3px;
   box-shadow: 1px 3px 8px 4px rgba(0, 0, 0, 0.2);
-
+  z-index: 2 ;
 }
 
 .tool {
@@ -221,4 +259,5 @@ input[type="range"] {
   padding: 10px;
 
   box-shadow: 1px 3px 8px 4px rgba(0, 0, 0, 0.2);
+  z-index: 2;
 }
