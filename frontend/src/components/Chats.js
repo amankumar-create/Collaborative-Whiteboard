@@ -6,7 +6,7 @@ export default function Chats({ socket, username, roomid }) {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([{message:"Welcome", type:"welcome"}]);
   const [collapsed, setCollapsed] = useState(false);
-
+  const [isInputFocused, setIsInputFocused] = useState(false);
   socket.on("message", (payload) => {
     console.log(payload.senderId);
     setMessages([...messages, payload]);
@@ -24,6 +24,11 @@ export default function Chats({ socket, username, roomid }) {
   function handleChange(event) {
     setMessage(event.target.value);
   }
+  const handleKeyUp = (event) => {
+    if (isInputFocused && event.key === 'Enter') {
+      handleSend();
+    }
+  };
 
   return (
     <div>
@@ -70,7 +75,10 @@ export default function Chats({ socket, username, roomid }) {
           <input
             type="text"
             value={message}
+            onFocus={() => setIsInputFocused(true)}
+            onBlur={() => setIsInputFocused(false)}
             onChange={(e) => setMessage(e.target.value)}
+            onKeyUp={handleKeyUp}
             placeholder="Type your message..."
           />
           <button onClick={handleSend}>Send</button>

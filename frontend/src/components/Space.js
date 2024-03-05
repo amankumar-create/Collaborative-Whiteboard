@@ -7,8 +7,8 @@ import Chats from "./Chats";
 import ActiveUsers from "./ActiveUsers";
 import Whiteboard from "./Whiteboard";
 
-const socket = io.connect("http://localhost:5000");
-// const socket = io.connect("https://whiteboardbackend-mc0t.onrender.com");
+// const socket = io.connect("http://localhost:5000");
+const socket = io.connect("https://whiteboardbackend-mc0t.onrender.com");
 
 const Space = ({ username, roomid }) => {
     
